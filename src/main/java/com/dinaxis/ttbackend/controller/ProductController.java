@@ -17,7 +17,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @PostMapping("/product")
+    @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody Product newProduct){
 
         Product createdProduct = productService.createProduct(newProduct);
@@ -28,12 +28,12 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/product")
+    @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProducts(){
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable int id){{
 
         Product product = productService.getProductById(id);
@@ -46,7 +46,7 @@ public class ProductController {
 
     }}
 
-    @PutMapping("/product/{id}")
+    @PutMapping("/products/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable int id, @RequestBody Product product){
         Product modifiedProduct = null;
 
@@ -59,7 +59,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/product/stock/{id}/{stock}")
+    @PutMapping("/products/stock/{id}/{stock}")
     public ResponseEntity<Product> updateProductStock(@PathVariable int id, @PathVariable int stock ) {
 
         if (stock < 0) {
@@ -74,7 +74,7 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/product/{id}")
+    @DeleteMapping("/products/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable int id){
         Product product = productService.getProductById(id);
         if(product != null){

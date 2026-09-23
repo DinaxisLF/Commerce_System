@@ -1,9 +1,11 @@
 package com.dinaxis.ttbackend.model;
 
+import com.dinaxis.ttbackend.model.dto.SubOrderDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,13 +18,13 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false)
-    Double totalAmount;
+    Double totalAmount = 0.0;
 
-    @Column(nullable = false, name = "create_at")
+    @Column(nullable = false, name = "created_at")
     Timestamp createAt = new Timestamp(System.currentTimeMillis());
 
     @Column(nullable = false)
@@ -30,7 +32,7 @@ public class Order {
     OrderStatus status = OrderStatus.PENDING;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SubOrder> subOrders;
+    private List<SubOrder> subOrders = new ArrayList<>();
 
     public void addSubOrder(SubOrder subOrder){
         subOrders.add(subOrder);

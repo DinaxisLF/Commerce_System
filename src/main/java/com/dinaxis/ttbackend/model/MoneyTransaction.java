@@ -18,7 +18,7 @@ import java.sql.Timestamp;
 public class MoneyTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, name = "transaction_type" )

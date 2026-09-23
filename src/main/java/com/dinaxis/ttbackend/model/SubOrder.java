@@ -18,7 +18,7 @@ import java.util.List;
 public class SubOrder {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,6 +34,10 @@ public class SubOrder {
 
     @OneToMany(mappedBy = "subOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubOrderItems> items = new ArrayList<>();
+
+    @Column(nullable = false, name = "status")
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status = OrderStatus.PENDING;
 
     public void addItem(SubOrderItems item) {
         items.add(item);
