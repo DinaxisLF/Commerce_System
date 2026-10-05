@@ -1,10 +1,9 @@
 package com.dinaxis.ttbackend.model;
 
-import com.dinaxis.ttbackend.model.dto.SubOrderDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,14 +17,14 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
     @Column(nullable = false)
     Double totalAmount = 0.0;
 
     @Column(nullable = false, name = "created_at")
-    Timestamp createAt = new Timestamp(System.currentTimeMillis());
+    LocalDateTime createAt = LocalDateTime.now();
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

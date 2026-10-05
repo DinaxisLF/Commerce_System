@@ -4,9 +4,8 @@ package com.dinaxis.ttbackend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
-import org.hibernate.Transaction;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "money_transactions")
@@ -18,12 +17,14 @@ import java.sql.Timestamp;
 public class MoneyTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "transaction_type" )
     private TransactionType type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionCategory category;
 
@@ -34,7 +35,7 @@ public class MoneyTransaction {
     private String description;
 
     @Column(nullable = false, name = "created_at")
-    private Timestamp createAt = new Timestamp(System.currentTimeMillis());
+    private LocalDateTime createAt = LocalDateTime.now();
 
 
 

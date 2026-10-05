@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -174,7 +173,7 @@ public class OrderService {
 
         SubOrderResponseDTO subOrderResponseDTO = new SubOrderResponseDTO();
         subOrderResponseDTO.setSubOrderId(subOrder.getId());
-        subOrderResponseDTO.setStatus(subOrder.getStatus());
+        subOrderResponseDTO.setSubOrderStatus(subOrder.getStatus());
         subOrderResponseDTO.setItems(subOrder.getItems().stream().map(item -> {
             OrderItemRequestDTO itemDTO = new OrderItemRequestDTO();
             itemDTO.setProductId(item.getProduct().getId());

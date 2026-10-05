@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -14,5 +14,5 @@ public class OrderResponseDTO{
     private Integer orderId;
     private Double totalAmount;
     private OrderStatus status;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 }
