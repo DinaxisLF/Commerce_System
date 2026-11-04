@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Data
@@ -12,7 +13,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class OrderResponseDTO{
     private Integer orderId;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
     private OrderStatus status;
     private Timestamp createdAt;
 }

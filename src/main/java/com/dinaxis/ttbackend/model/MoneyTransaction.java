@@ -2,10 +2,10 @@ package com.dinaxis.ttbackend.model;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
-import org.hibernate.Transaction;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Entity
@@ -21,15 +21,17 @@ public class MoneyTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, name = "transaction_type" )
+    @Column(nullable = false, name = "transaction_type")
+    @Enumerated(EnumType.STRING)
     private TransactionType type;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private TransactionCategory category;
 
-    @Column(nullable = false)
-    @Min(value = 1, message = "Amount must be non-negative and greater than zero")
-    private Double amount;
+    @Column(nullable = false, precision = 10, scale = 2)
+    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
+    private BigDecimal amount;
 
     private String description;
 

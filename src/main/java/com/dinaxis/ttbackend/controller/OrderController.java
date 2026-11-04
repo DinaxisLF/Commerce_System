@@ -1,10 +1,9 @@
 package com.dinaxis.ttbackend.controller;
 
 
-import com.dinaxis.ttbackend.model.OrderStatus;
 import com.dinaxis.ttbackend.model.dto.OrderRequestDTO;
 import com.dinaxis.ttbackend.model.dto.OrderResponseDTO;
-import com.dinaxis.ttbackend.model.dto.SubOrderDTO;
+import com.dinaxis.ttbackend.model.dto.OrderSummaryDTO;
 import com.dinaxis.ttbackend.model.dto.SubOrderResponseDTO;
 import com.dinaxis.ttbackend.service.OrderService;
 import jakarta.validation.Valid;
@@ -36,19 +35,12 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{id:[0-9]+}")
-    public ResponseEntity<OrderResponseDTO> getOrderSummary(@Valid @PathVariable int id){
-
-        OrderResponseDTO orderSummary = orderService.getOrderSummary(id);
-
-        return  new ResponseEntity<OrderResponseDTO>(orderSummary, HttpStatus.OK);
+    public ResponseEntity<OrderSummaryDTO> getOrderDetail(@PathVariable int id){
+        return new ResponseEntity<>(orderService.getOrderDetail(id), HttpStatus.OK);
     }
 
     @GetMapping("/orders/status")
-    public ResponseEntity<List<OrderResponseDTO>> getOrdersByStatus(@Valid @RequestParam String status){
-
-        if(!status.equalsIgnoreCase("PENDING") && !status.equalsIgnoreCase("COMPLETED") && !status.equalsIgnoreCase("CANCELED")){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByStatus(@RequestParam String status){
 
         List<OrderResponseDTO> ordersByStatus = orderService.getOrdersByStatus(status);
 
@@ -56,12 +48,17 @@ public class OrderController {
     }
 
 
-    @PatchMapping("orders/{id}/status")
-    public ResponseEntity<OrderResponseDTO> updateOrderStatus(@Valid @PathVariable int id, @RequestParam String status){
+    @PatchMapping("/orders/{id}/status")
+    public ResponseEntity<OrderResponseDTO> updateOrderStatus(@PathVariable int id, @RequestParam String status){
 
         OrderResponseDTO updatedOrder = orderService.updateOrderStatus(id, status);
 
         return new ResponseEntity<OrderResponseDTO>(updatedOrder, HttpStatus.OK);
+    }
+
+    @PatchMapping("/orders/{id}/suborders/{subOrderId}/status")
+    public ResponseEntity<SubOrderResponseDTO> updateSubOrderStatus(@PathVariable int id, @PathVariable int subOrderId, @RequestParam String status){
+        return new ResponseEntity<>(orderService.updateSubOrderStatus(id, subOrderId, status), HttpStatus.OK);
     }
 
 }
