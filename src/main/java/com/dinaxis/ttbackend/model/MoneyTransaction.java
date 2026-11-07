@@ -18,14 +18,13 @@ import java.sql.Timestamp;
 public class MoneyTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, name = "transaction_type")
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionCategory category;
@@ -37,7 +36,7 @@ public class MoneyTransaction {
     private String description;
 
     @Column(nullable = false, name = "created_at")
-    private LocalDateTime createAt = LocalDateTime.now();
+    private Timestamp createAt = new Timestamp(System.currentTimeMillis());
 
 
 
