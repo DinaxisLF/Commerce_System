@@ -15,5 +15,5 @@ public class OrderResponseDTO{
     private Integer orderId;
     private BigDecimal totalAmount;
     private OrderStatus status;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 }
