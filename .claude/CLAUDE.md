@@ -38,7 +38,15 @@ Layered: `controller` → `service` → `repository` (Spring Data JPA), with `mo
 
 ## Roadmap and workflow
 
-Work is incremental: one `feature/*` branch per step, merged to `main` before the next. Planned order: payments (per sub-order, at completion) → transactions (outcomes) → cash-session (single open register, expected cash) → inventory (stock movement log) → auth (JWT, roles ADMIN/CASHIER) → reports. Don't pull a later step's features into the current branch.
+Development workflow for every change:
+
+1. Create a new branch from an up-to-date `main` (`feature/*` or `fix/*`).
+2. Make the changes.
+3. Add or update service tests for the new rules.
+4. Run the tests (`./mvnw test -Dtest='*ServiceTest'`).
+5. If they pass, add an entry at the top of `SCRATCHPAD.md` with what changed, any API, DB or Postman impact, and the test count. Then it's done. The user commits, pushes and merges.
+
+Work is incremental: one branch per step, merged to `main` before the next. Planned order: payments (per sub-order, at completion) → transactions (outcomes) → cash-session (single open register, expected cash) → inventory (stock movement log) → auth (JWT, roles ADMIN/CASHIER) → reports. Don't pull a later step's features into the current branch.
 
 Planned permissions: ADMIN only opens or closes sessions, cancels orders and sub-orders, registers outcomes, manages products, prices and users, and sees reports. CASHIER creates and completes orders, adjusts inventory and sees the expected cash.
 

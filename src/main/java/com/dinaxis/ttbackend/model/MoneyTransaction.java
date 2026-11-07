@@ -33,7 +33,18 @@ public class MoneyTransaction {
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
+    @Column(nullable = false, name = "payment_method")
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
     private String description;
+
+    // Set for sales, null for outcomes.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_order_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private SubOrder subOrder;
 
     @Column(nullable = false, name = "created_at")
     private Timestamp createAt = new Timestamp(System.currentTimeMillis());

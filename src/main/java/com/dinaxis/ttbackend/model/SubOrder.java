@@ -40,6 +40,13 @@ public class SubOrder {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Column(name = "payment_method")
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @Column(name = "amount_received", precision = 10, scale = 2)
+    private BigDecimal amountReceived;
+
     public void addItem(SubOrderItems item) {
         items.add(item);
         item.setSubOrder(this);
