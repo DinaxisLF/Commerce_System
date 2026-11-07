@@ -1,8 +1,7 @@
 package com.dinaxis.ttbackend.service;
 
 import com.dinaxis.ttbackend.model.*;
-import com.dinaxis.ttbackend.model.dto.SubOrderResponseDTO;
-import com.dinaxis.ttbackend.model.dto.SubOrderStatusRequestDTO;
+import com.dinaxis.ttbackend.model.dto.*;
 import com.dinaxis.ttbackend.repository.MoneyTransactionRepository;
 import com.dinaxis.ttbackend.repository.OrderRepository;
 import com.dinaxis.ttbackend.repository.ProductRepository;
@@ -16,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,7 +43,7 @@ class OrderServiceTest {
         order.addSubOrder(sub1);
         order.addSubOrder(sub2);
         order.setTotalAmount(new BigDecimal("255.00"));
-        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+        lenient().when(orderRepository.findById(1)).thenReturn(Optional.of(order)); // createOrder tests don't look orders up
     }
 
     private SubOrder subOrder(int id, int qty) {
@@ -84,7 +84,7 @@ class OrderServiceTest {
     @Test
     void cancelingSubOrderRestoresStockAndLowersTotal() {
         orderService.updateSubOrderStatus(1, 1, req("CANCELED", null, null));
-        assertEquals(12, torta.getStock());
+        verify(productRepository).incrementStock(1, 2);
         assertEquals(0, new BigDecimal("85.00").compareTo(order.getTotalAmount()));
         assertEquals(OrderStatus.CANCELED, sub1.getStatus());
     }
@@ -93,7 +93,8 @@ class OrderServiceTest {
     void cancelingOrderRestoresStockOfNonCanceledSubOrdersOnly() {
         sub1.setStatus(OrderStatus.CANCELED); // its stock was already restored when it was canceled
         orderService.updateOrderStatus(1, "CANCELED");
-        assertEquals(11, torta.getStock());
+        verify(productRepository).incrementStock(1, 1); // sub2 only
+        verify(productRepository, never()).incrementStock(1, 2);
         assertEquals(OrderStatus.CANCELED, sub2.getStatus());
     }
 
@@ -159,7 +160,52 @@ class OrderServiceTest {
     void orderWithPaidSubOrderCannotBeCanceled() {
         sub1.setStatus(OrderStatus.COMPLETED);
         assertThrows(HttpClientErrorException.class, () -> orderService.updateOrderStatus(1, "CANCELED"));
-        assertEquals(10, torta.getStock());
+        verify(productRepository, never()).incrementStock(anyInt(), anyInt());
         assertEquals(OrderStatus.PENDING, order.getStatus());
+    }
+
+    // --- stock concurrency ---
+
+    private OrderRequestDTO orderOf(int productId, int qty) {
+        OrderItemRequestDTO item = new OrderItemRequestDTO();
+        item.setProductId(productId);
+        item.setQuantity(qty);
+        SubOrderDTO sub = new SubOrderDTO();
+        sub.setCustomerName("Sara");
+        sub.setItems(List.of(item));
+        OrderRequestDTO request = new OrderRequestDTO();
+        request.setSubOrders(List.of(sub));
+        return request;
+    }
+
+    @Test
+    void createOrderDecrementsStockAtomically() {
+        when(productRepository.findById(1)).thenReturn(Optional.of(torta));
+        when(productRepository.decrementStock(1, 3)).thenReturn(1);
+
+        OrderResponseDTO res = orderService.createOrder(orderOf(1, 3));
+
+        verify(productRepository).decrementStock(1, 3);
+        verify(productRepository, never()).save(any());
+        assertEquals(0, new BigDecimal("255.00").compareTo(res.getTotalAmount()));
+    }
+
+    @Test
+    void createOrderFailsWhenAnotherOrderTookTheStock() {
+        // In-memory stock says 10, but the database update matched no row: a concurrent order got there first.
+        when(productRepository.findById(1)).thenReturn(Optional.of(torta));
+        when(productRepository.decrementStock(1, 3)).thenReturn(0);
+
+        HttpClientErrorException ex = assertThrows(HttpClientErrorException.class, () -> orderService.createOrder(orderOf(1, 3)));
+        assertEquals(400, ex.getStatusCode().value());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void inactiveProductIsRejectedBeforeTouchingStock() {
+        torta.setActive(false);
+        when(productRepository.findById(1)).thenReturn(Optional.of(torta));
+        assertThrows(HttpClientErrorException.class, () -> orderService.createOrder(orderOf(1, 1)));
+        verify(productRepository, never()).decrementStock(anyInt(), anyInt());
     }
 }
