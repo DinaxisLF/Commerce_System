@@ -41,7 +41,9 @@ public class OrderService {
 
                 if(!product.getActive()){
                     throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,"Product not available: " + product.getName());
-                }else if(product.getStock() < item.getQuantity()){
+                }
+                // Stock is checked and decremented in the database, so a concurrent order can't oversell. Throwing rolls back earlier items.
+                if(productRepository.decrementStock(product.getId(), item.getQuantity()) == 0){
                     throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Product out of stock: " + product.getName());
                 }
 
@@ -53,9 +55,6 @@ public class OrderService {
                 itemSub.setNotes(item.getNotes());
                 newSubOrder.addItem(itemSub);
                 subOrderTotal = subOrderTotal.add(itemSub.getTotalPrice());
-
-                product.setStock(product.getStock() - item.getQuantity());
-                productRepository.save(product);
             }
             newSubOrder.setSubtotalAmount(subOrderTotal);
             order.addSubOrder(newSubOrder);
@@ -192,9 +191,7 @@ public class OrderService {
 
     private void restoreStock(SubOrder subOrder){
         for(SubOrderItems item : subOrder.getItems()){
-            Product product = item.getProduct();
-            product.setStock(product.getStock() + item.getQuantity());
-            productRepository.save(product);
+            productRepository.incrementStock(item.getProduct().getId(), item.getQuantity());
         }
     }
 

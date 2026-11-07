@@ -1,5 +1,5 @@
 package com.dinaxis.ttbackend.model;
 
 public enum TransactionCategory {
-    SALE, SUPPLIES, WITHDRAWAL
+    SALE, SUPPLIES, WITHDRAWAL, OTHER
 }

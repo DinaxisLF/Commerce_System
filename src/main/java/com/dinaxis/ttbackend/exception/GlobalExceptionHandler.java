@@ -1,5 +1,6 @@
 package com.dinaxis.ttbackend.exception;
 
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -40,5 +41,14 @@ public class GlobalExceptionHandler {
         errorResponse.put("message", ex.getStatusText());
 
         return new ResponseEntity<>(errorResponse, ex.getStatusCode());
+    }
+
+    // Two orders locking the same products in opposite order can deadlock in MySQL; the losing one is rolled back and can be retried.
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleLockConflicts(PessimisticLockingFailureException ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", HttpStatus.CONFLICT.value());
+        errorResponse.put("message", "Another order is updating the same products, please retry");
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }
