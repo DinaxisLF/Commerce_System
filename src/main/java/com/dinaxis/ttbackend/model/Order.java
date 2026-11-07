@@ -18,14 +18,14 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, precision = 10, scale = 2)
     BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Column(nullable = false, name = "created_at")
-    LocalDateTime createAt = LocalDateTime.now();
+    Timestamp createAt = new Timestamp(System.currentTimeMillis());
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
