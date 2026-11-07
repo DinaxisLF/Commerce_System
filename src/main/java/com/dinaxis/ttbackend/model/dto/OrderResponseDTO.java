@@ -5,14 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderResponseDTO{
     private Integer orderId;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
     private OrderStatus status;
     private LocalDateTime createdAt;
 }

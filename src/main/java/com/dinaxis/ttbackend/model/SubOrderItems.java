@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "sub_order_items")
 @Data
@@ -21,6 +23,8 @@ public class SubOrderItems {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_order_id", nullable = false)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private SubOrder subOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,13 +35,13 @@ public class SubOrderItems {
     @Min(value = 1, message = "Quantity must be non-negative and greater than zero")
     private Integer quantity;
 
-    @Column(nullable = false, name = "unit_price")
-    @Min(value = 1, message = "Unit price must be non-negative and greater than zero")
-    private Double unitPrice;
+    @Column(nullable = false, name = "unit_price", precision = 10, scale = 2)
+    private BigDecimal unitPrice;
 
-    @Column(nullable = false, name = "total_price")
-    @Min(value = 1, message = "Total price must be non-negative and greater than zero")
-    private Double totalPrice;
+    @Column(nullable = false, name = "total_price", precision = 10, scale = 2)
+    private BigDecimal totalPrice;
+
+    private String notes;
 
 
 

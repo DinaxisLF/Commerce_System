@@ -48,12 +48,12 @@ public class ProductService {
     }
 
     public boolean deleteProduct(int id){
-        if(productRepository.existsById(id)){
-            productRepository.deleteById(id);
+        // Soft delete: sold products are referenced by sub_order_items, a hard delete would violate the FK.
+        return productRepository.findById(id).map(product -> {
+            product.setActive(false);
+            productRepository.save(product);
             return true;
-        }else{
-            return false;
-        }
+        }).orElse(false);
     }
 
 

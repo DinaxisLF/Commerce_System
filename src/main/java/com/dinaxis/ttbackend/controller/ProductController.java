@@ -47,7 +47,7 @@ public class ProductController {
     }}
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable int id, @RequestBody Product product){
+    public ResponseEntity<Product> updateProduct(@PathVariable int id, @Valid @RequestBody Product product){
         Product modifiedProduct = null;
 
         modifiedProduct = productService.updateProduct(id, product);
@@ -79,7 +79,7 @@ public class ProductController {
         Product product = productService.getProductById(id);
         if(product != null){
             productService.deleteProduct(id);
-            return new ResponseEntity<>("Product Deleted", HttpStatus.OK);
+            return new ResponseEntity<>("Product deactivated", HttpStatus.OK);
         }else{
             return new ResponseEntity<>("Product not found",HttpStatus.NOT_FOUND);
         }

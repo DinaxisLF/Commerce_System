@@ -2,7 +2,10 @@ package com.dinaxis.ttbackend.model;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+
+import java.math.BigDecimal;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -22,10 +25,12 @@ public class Product {
     @Enumerated(EnumType.STRING)
     @NotNull
     private Category category;
+    @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull
+    @DecimalMin(value = "0.01", message = "Price must be greater than zero")
+    private BigDecimal price;
     @Column(nullable = false)
-    @Min(value = 1, message = "Price must be non-negative and greater than zero")
-    private Double price;
-    @Column(nullable = false)
+    @NotNull
     @Min(value = 0, message = "Stock must be non-negative")
     private Integer stock;
     @Column(name = "is_active")
