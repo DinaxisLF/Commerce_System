@@ -2,6 +2,7 @@ package com.dinaxis.ttbackend.service;
 
 import com.dinaxis.ttbackend.model.*;
 import com.dinaxis.ttbackend.model.dto.*;
+import com.dinaxis.ttbackend.repository.MoneyTransactionRepository;
 import com.dinaxis.ttbackend.repository.OrderRepository;
 import com.dinaxis.ttbackend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class OrderService {
 
     @Autowired
     ProductRepository productRepository;
+
+    @Autowired
+    private MoneyTransactionRepository moneyTransactionRepository;
 
     @Transactional
     public OrderResponseDTO createOrder(OrderRequestDTO newOrder) {
@@ -99,6 +103,9 @@ public class OrderService {
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "All sub-orders must be completed before completing the order");
             }
         }else if(newStatus == OrderStatus.CANCELED){
+            if(order.getSubOrders().stream().anyMatch(s -> s.getStatus() == OrderStatus.COMPLETED)){
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Order has paid sub-orders, cancel the pending sub-orders and complete the order instead");
+            }
             for(SubOrder subOrder : order.getSubOrders()){
                 if(subOrder.getStatus() != OrderStatus.CANCELED){
                     restoreStock(subOrder);
@@ -114,20 +121,22 @@ public class OrderService {
         return toResponse(order);
     }
 
-    // PENDING -> COMPLETED, or PENDING -> CANCELED (restores stock, subtracts the subtotal from the order total).
+    // PENDING -> COMPLETED (takes the payment, records the sale), or PENDING -> CANCELED (restores stock, subtracts the subtotal from the order total).
     @Transactional
-    public SubOrderResponseDTO updateSubOrderStatus(int orderId, int subOrderId, String status){
+    public SubOrderResponseDTO updateSubOrderStatus(int orderId, int subOrderId, SubOrderStatusRequestDTO request){
         Order order = findOrder(orderId);
         SubOrder subOrder = order.getSubOrders().stream().filter(s -> s.getId() == subOrderId).findFirst()
                 .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "Sub-order " + subOrderId + " not found in order " + orderId));
-        OrderStatus newStatus = parseStatus(status);
+        OrderStatus newStatus = parseStatus(request.getStatus());
         requirePending(order.getStatus(), "Order");
         requirePending(subOrder.getStatus(), "Sub-order");
 
         if(newStatus == OrderStatus.PENDING){
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Sub-order is already PENDING");
         }
-        if(newStatus == OrderStatus.CANCELED){
+        if(newStatus == OrderStatus.COMPLETED){
+            takePayment(subOrder, request);
+        }else if(newStatus == OrderStatus.CANCELED){
             restoreStock(subOrder);
             order.setTotalAmount(order.getTotalAmount().subtract(subOrder.getSubtotalAmount()));
         }
@@ -135,6 +144,31 @@ public class OrderService {
         subOrder.setStatus(newStatus);
         orderRepository.save(order);
         return toSubOrderResponse(subOrder);
+    }
+
+    private void takePayment(SubOrder subOrder, SubOrderStatusRequestDTO request){
+        PaymentMethod method = request.getPaymentMethod();
+        if(method == null){
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Payment method is required to complete a sub-order");
+        }
+        BigDecimal received = null;
+        if(method == PaymentMethod.CASH){
+            received = request.getAmountReceived();
+            if(received == null || received.compareTo(subOrder.getSubtotalAmount()) < 0){
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Cash received must cover the subtotal of " + subOrder.getSubtotalAmount());
+            }
+        }
+        subOrder.setPaymentMethod(method);
+        subOrder.setAmountReceived(received);
+
+        MoneyTransaction sale = new MoneyTransaction();
+        sale.setType(TransactionType.IN);
+        sale.setCategory(TransactionCategory.SALE);
+        sale.setAmount(subOrder.getSubtotalAmount());
+        sale.setPaymentMethod(method);
+        sale.setSubOrder(subOrder);
+        sale.setDescription("Sale: order " + subOrder.getOrder().getId() + ", sub-order " + subOrder.getId());
+        moneyTransactionRepository.save(sale);
     }
 
     private Order findOrder(int orderId){
@@ -175,6 +209,11 @@ public class OrderService {
         dto.setCustomerName(subOrder.getCustomerName());
         dto.setSubtotalAmount(subOrder.getSubtotalAmount());
         dto.setStatus(subOrder.getStatus());
+        dto.setPaymentMethod(subOrder.getPaymentMethod());
+        dto.setAmountReceived(subOrder.getAmountReceived());
+        if(subOrder.getAmountReceived() != null){
+            dto.setChange(subOrder.getAmountReceived().subtract(subOrder.getSubtotalAmount()));
+        }
         dto.setItems(subOrder.getItems().stream().map(item -> new OrderItemResponseDTO(
                 item.getProduct().getId(), item.getProduct().getName(), item.getQuantity(),
                 item.getUnitPrice(), item.getTotalPrice(), item.getNotes())).toList());

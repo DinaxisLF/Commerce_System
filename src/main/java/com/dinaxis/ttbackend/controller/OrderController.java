@@ -5,6 +5,7 @@ import com.dinaxis.ttbackend.model.dto.OrderRequestDTO;
 import com.dinaxis.ttbackend.model.dto.OrderResponseDTO;
 import com.dinaxis.ttbackend.model.dto.OrderSummaryDTO;
 import com.dinaxis.ttbackend.model.dto.SubOrderResponseDTO;
+import com.dinaxis.ttbackend.model.dto.SubOrderStatusRequestDTO;
 import com.dinaxis.ttbackend.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +58,8 @@ public class OrderController {
     }
 
     @PatchMapping("/orders/{id}/suborders/{subOrderId}/status")
-    public ResponseEntity<SubOrderResponseDTO> updateSubOrderStatus(@PathVariable int id, @PathVariable int subOrderId, @RequestParam String status){
-        return new ResponseEntity<>(orderService.updateSubOrderStatus(id, subOrderId, status), HttpStatus.OK);
+    public ResponseEntity<SubOrderResponseDTO> updateSubOrderStatus(@PathVariable int id, @PathVariable int subOrderId, @Valid @RequestBody SubOrderStatusRequestDTO request){
+        return new ResponseEntity<>(orderService.updateSubOrderStatus(id, subOrderId, request), HttpStatus.OK);
     }
 
 }
